@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surprise For You ❤️</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@400;600&display=swap');
+
+        :root {
+            --primary: #ff4081;
+            --secondary: #ffe4e1;
+            --bg: #fff0f5;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background: radial-gradient(circle at center, #fff0f5 0%, #ffc1e3 100%);
+            overflow: hidden;
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- Gift Box Section --- */
+        .gift-container {
+            position: relative;
+            cursor: pointer;
+            z-index: 10;
+            transition: transform 0.5s ease;
+        }
+
+        .gift-emoji {
+            font-size: 100px;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.15));
+            animation: bounce 2s infinite;
+        }
+
+        .tap-text {
+            text-align: center;
+            margin-top: 10px;
+            color: #d63384;
+            font-weight: 600;
+            font-size: 1.2rem;
+            animation: fadeIn 1.5s infinite alternate;
+        }
+
+        .gift-container.opened {
+            transform: scale(0);
+            opacity: 0;
+        }
+
+        /* --- Floating Items (Jewelry + Message) --- */
+        .item-container {
+            position: absolute;
+            bottom: 50%; /* Start from center */
+            left: 50%;
+            transform: translate(-50%, 50%);
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(255, 64, 129, 0.2);
+            pointer-events: none; /* Just for visual */
+            opacity: 0;
+            border: 1px solid #ffbcd9;
+            white-space: nowrap;
+        }
+
+        .item-icon {
+            font-size: 24px;
+            margin-right: 8px;
+        }
+
+        .item-text {
+            font-family: 'Dancing Script', cursive;
+            font-size: 18px;
+            color: #d63384;
+            font-weight: bold;
+        }
+
+        /* --- Animations --- */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0.5; }
+            to { opacity: 1; }
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translate(-50%, 50%) scale(0.5);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+                transform: translate(-50%, 50%) scale(1);
+            }
+            100% {
+                /* Target positions set by JS */
+                opacity: 0;
+                transform: translate(var(--tx), var(--ty)) rotate(var(--rot));
+            }
+        }
+
+        /* Reset Button */
+        .reset-btn {
+            position: fixed;
+            bottom: 30px;
+            padding: 10px 25px;
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            display: none;
+            z-index: 100;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="gift-container" id="giftBox" onclick="openGift()">
+        <div class="gift-emoji">🎁</div>
+        <div class="tap-text">Tap to Open</div>
+    </div>
+
+    <div id="animation-area"></div>
+
+    <audio id="bgMusic" loop>
+        <source src="music.mp3" type="audio/mpeg">
+    </audio>
+
+    <button class="reset-btn" id="resetBtn" onclick="location.reload()">Open Again ↻</button>
+
+    <script>
+        // Data: Jewelry Icons + Love Lines
+        const icons = ['📿', '💍', '💎', '👑', '💖', '✨'];
+        
+        // Short sweet messages that fit on a tag
+        const messages = [
+            "Meri Jaan ❤️", 
+            "Love You 3000", 
+            "So Beautiful 😍", 
+            "My Queen 👑", 
+            "Tum Hi Ho 🎵", 
+            "Best GF Ever", 
+            "Cutie Pie 😘", 
+            "Forever Yours", 
+            "My World 🌍", 
+            "Just for You 🎁",
+            "Smile Plz 😊"
+        ];
+
+        function openGift() {
+            const giftBox = document.getElementById('giftBox');
+            const music = document.getElementById('bgMusic');
+            const resetBtn = document.getElementById('resetBtn');
+
+            // 1. Animate Box Disappearing
+            giftBox.classList.add('opened');
+
+            // 2. Play Music (Try/Catch for browser policy)
+            music.play().catch(error => console.log("Music play blocked usually requires interaction"));
+
+            // 3. Show Reset Button after delay
+            setTimeout(() => {
+                resetBtn.style.display = 'block';
+            }, 2000);
+
+            // 4. Start the "Explosion" of gifts
+            // Spawn 40 items over the next 2 seconds
+            let count = 0;
+            const interval = setInterval(() => {
+                createFloatingItem();
+                count++;
+                if (count > 40) clearInterval(interval);
+            }, 100);
+        }
+
+        function createFloatingItem() {
+            const area = document.getElementById('animation-area');
+            const item = document.createElement('div');
+            item.classList.add('item-container');
+
+            // Pick random Icon and Message
+            const icon = icons[Math.floor(Math.random() * icons.length)];
+            const msg = messages[Math.floor(Math.random() * messages.length)];
+
+            item.innerHTML = `<span class="item-icon">${icon}</span> <span class="item-text">${msg}</span>`;
+
+            // Randomize Movement Direction (Spread out from center)
+            // tx (Translate X) = Random value between -100vw and +100vw
+            // ty (Translate Y) = Always moves UP (-100vh to -150vh)
+            const tx = (Math.random() - 0.5) * 200 + 'vw'; 
+            const ty = -(Math.random() * 100 + 50) + 'vh'; 
+            const rot = (Math.random() - 0.5) * 50 + 'deg';
+
+            // Set CSS variables for this specific item
+            item.style.setProperty('--tx', tx);
+            item.style.setProperty('--ty', ty);
+            item.style.setProperty('--rot', rot);
+
+            // Randomize Animation Speed
+            const duration = Math.random() * 3 + 4; // 4s to 7s float time
+            item.style.animation = `floatUp ${duration}s ease-out forwards`;
+
+            // Random Start Position variation (slight)
+            item.style.left = (50 + (Math.random() - 0.5) * 10) + '%';
+
+            // Append and Clean up
+            area.appendChild(item);
+            
+            // Remove from DOM after animation finishes
+            setTimeout(() => {
+                item.remove();
+            }, duration * 1000);
+        }
+    </script>
+
+</body>
+</html>
